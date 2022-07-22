@@ -1,65 +1,86 @@
-import React from "react";
-import { Formik, Field, Form, ErrorMessage } from "formik";
-import * as Yup from "yup";
+import { Formik } from "formik";
+import useAuth from "../hooks/useAuth";
+import useValidationSchema from "../hooks/useValidationSchema";
 import { useRouter } from "next/router";
+import { Button, Form, Container } from "react-bootstrap";
+import Link from "next/link";
 
 export default function Login() {
   const router = useRouter();
-  const users = {
-    "teste@gmail.com": "12345",
-    "usuario@gmail.com": "usuario",
-  };
+  const { success } = router.query;
+
+  const { loginSchema } = useValidationSchema();
+  const { login } = useAuth();
+
   return (
-    <div className="container d-flex flex-column justify-content-center align-items-center h-100">
+    <Container>
+      {success === "true" && (
+        <div
+          style={{
+            paddingTop: "10px",
+            paddingBottom: "10px",
+            color: "green",
+          }}
+        >
+          You`&apos;`re signed up!
+        </div>
+      )}
       <Formik
-        initialValues={{ email: "", password: "" }}
-        validationSchema={Yup.object({
-          email: Yup.string()
-            .email("Endereço de email inválido")
-            .required("Campo obrigatório"),
-          password: Yup.string().required("Campo obrigatório"),
-        })}
-        onSubmit={(values, { setSubmitting }) => {
-          setTimeout(() => {
-            console.log({ values });
-            const { email, password } = values;
-            if (email in users) {
-              if (users[email] === password) {
-                console.log("logado");
-                router.push("/results");
-              } else {
-                console.log("senha errada");
-              }
-            } else {
-              console.log("email errado");
-            }
-
-            setSubmitting(false);
-          }, 400);
+        initialValues={{
+          username: "",
+          password: "",
         }}
+        validationSchema={loginSchema}
+        onSubmit={login}
+        validateOnMount={false}
+        validateOnChange={false}
+        validateOnBlur={false}
       >
-        <Form className="d-flex flex-column align-items-center text-white">
-          <div className="mb-3">
-            <label htmlFor="email">Email</label>
-            <Field name="email" type="text" className="form-control" />
-            <div className="text-danger">
-              <ErrorMessage name="email" />
-            </div>
-          </div>
-
-          <div className="mb-3">
-            <label htmlFor="password">Senha</label>
-            <Field name="password" type="password" className="form-control" />
-            <div className="text-danger">
-              <ErrorMessage name="password" />
-            </div>
-          </div>
-
-          <button className="btn btn-primary" type="submit">
-            Enviar
-          </button>
-        </Form>
+        {({
+          isSubmitting,
+          errors,
+          values,
+          handleChange,
+          handleBlur,
+          handleSubmit,
+        }) => (
+          <Form onSubmit={handleSubmit}>
+            <Form.Group>
+              <Form.Label>Usuário</Form.Label>
+              <Form.Control
+                type="text"
+                name="username"
+                placeholder="Usuário ou email"
+                onChange={handleChange}
+                onBlur={handleBlur}
+                value={values?.username}
+              />
+              <Form.Text isError>{errors?.username}</Form.Text>
+            </Form.Group>
+            <Form.Group>
+              <Form.Label>Password</Form.Label>
+              <Form.Control
+                type="password"
+                name="password"
+                placeholder="Senha"
+                onChange={handleChange}
+                onBlur={handleBlur}
+                value={values?.password}
+              />
+              <Form.Text isError>{errors?.password}</Form.Text>
+            </Form.Group>
+            <Form.Group>
+              <Form.Text>
+                Não tem conta?
+                <Link href="/register">Cadastrar</Link>.
+              </Form.Text>
+            </Form.Group>
+            <Button variant="primary" type="submit">
+              Enviar
+            </Button>
+          </Form>
+        )}
       </Formik>
-    </div>
+    </Container>
   );
 }
